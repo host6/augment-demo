@@ -22,11 +22,3 @@ jobs:
 
     - name: CI
       run: go test ./... -short
-    - name: Generate PR Review
-      uses: augmentcode/review-pr@v0
-      with:
-        augment_session_auth: ${{ secrets.AUGMENT_SESSION_AUTH }}
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        pull_number: ${{ github.event.pull_request.number }}
-        repo_name: ${{ github.repository }}
-
