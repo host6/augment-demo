@@ -1,0 +1,16 @@
+/*
+* Copyright (c) 2023-present unTill Pro, Ltd.
+*/
+
+ABSTRACT WORKSPACE UntillAWorkspace (
+    TABLE Prices INHERITS sys.CDoc(
+        Price float
+    );
+
+    TABLE Promotions INHERITS sys.CDoc(
+        Discount float
+    );
+
+    -- Declares ROLE
+    ROLE UntillPaymentsUser;
+);

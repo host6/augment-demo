@@ -1,0 +1,9 @@
+go 1.24.4
+
+use (
+	.
+	./cmd/ctool
+	./cmd/edger
+	./pkg/iextengine/wazero/_testdata
+	./pkg/sys/it/testdata/apps/test2.app1/src
+)

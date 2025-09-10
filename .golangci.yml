@@ -1,0 +1,105 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bidichk
+    - durationcheck
+    - errcheck
+    - errorlint
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gosec
+    - govet
+    - copyloopvar
+    - durationcheck
+    - mirror
+    - misspell
+    - nilnil
+    - nosprintfhostport
+    - prealloc
+    - predeclared
+    - revive
+    - staticcheck
+    - testifylint
+    - unconvert
+    - unused
+  settings:
+    gocritic:
+      disabled-checks:
+        - appendAssign
+        - dupArg
+        - ifElseChain
+        - singleCaseSwitch
+        - exitAfterDefer
+        - commentFormatting
+    gosec:
+      excludes:
+        - G101
+        - G601
+        - G602
+    misspell:
+      ignore-rules:
+        - untill
+    nilnil:
+      checked-types:
+        - func
+    revive:
+      severity: warning
+      rules:
+        - name: indent-error-flow
+          severity: warning
+        - name: add-constant
+          arguments:
+            - allowFloats: 0.0,0.,1.0,1.,2.0,2.
+              allowInts: 0,1,2
+              allowStrs: '""'
+              maxLitCount: "3"
+          severity: warning
+    staticcheck:
+      checks:
+        - all
+        - '-QF1008' # possibly dangerous: could remove embedded field ... from selector
+    testifylint:
+      disable:
+        - float-compare
+    unparam:
+      check-exported: true
+    errcheck:
+      exclude-functions:
+        - encoding/binary.Write
+        - encoding/binary.Read
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+        - gosec
+        - revive
+        - goconst
+        path: _test.go
+      - linters:
+        - errcheck
+        source: 'require\.Panics(?:WithValue)?'
+      - linters:
+        - testifylint
+        text: (do not use require in http handlers)|(must only be used in the goroutine running the test function)
+      - linters:
+        - staticcheck
+        text: should not use underscores
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

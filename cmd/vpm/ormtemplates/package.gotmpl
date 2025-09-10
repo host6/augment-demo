@@ -1,0 +1,32 @@
+{{define "package"}}
+
+{{if .HeaderFileContent}}
+{{.HeaderFileContent}}
+{{end}}
+
+package orm
+
+import (
+	"github.com/voedger/voedger/pkg/exttinygo"
+	"github.com/voedger/voedger/pkg/sys"
+)
+
+
+// package type
+type TPackage_{{.Name}} struct {
+    Path 								string
+    {{range .Items}}{{if (ne .Type "Projector")}}{{.Type}}_{{.Name}} {{.Type}}_{{$.Name}}_{{.Name}}
+    {{end}}{{end}}
+}
+
+// package variables
+var Package_{{.Name}} = TPackage_{{.Name}}{  
+    Path: "{{.FullPath}}",
+    {{range .Items}}{{if (ne .Type "Projector")}}{{.Type}}_{{.Name}}: {{.Type}}_{{$.Name}}_{{.Name}}{
+        Type: Type{fQName: "{{.Package.FullPath}}.{{.Name}}"},
+    },{{end}}{{end}}
+}
+
+{{range .Items}}{{template "item" .}}{{end}}
+
+{{end}}

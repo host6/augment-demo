@@ -1,0 +1,76 @@
+/*
+ * Copyright (c) 2022-present unTill Pro, Ltd.
+ */
+
+package state
+
+import (
+	"context"
+	"io"
+	"time"
+
+	"github.com/voedger/voedger/pkg/appdef"
+	"github.com/voedger/voedger/pkg/iauthnz"
+	"github.com/voedger/voedger/pkg/isecrets"
+	"github.com/voedger/voedger/pkg/istructs"
+	"github.com/voedger/voedger/pkg/itokens"
+	"github.com/voedger/voedger/pkg/state/smtptest"
+
+	"github.com/voedger/voedger/pkg/coreutils/federation"
+)
+
+type PartitionIDFunc func() istructs.PartitionID
+type WSIDFunc func() istructs.WSID
+type N10nFunc func(view appdef.QName, wsid istructs.WSID, offset istructs.Offset)
+type AppStructsFunc func() istructs.IAppStructs
+type CUDFunc func() istructs.ICUD
+type ObjectBuilderFunc func() istructs.IObjectBuilder
+type PrincipalsFunc func() []iauthnz.Principal
+type TokenFunc func() string
+type PLogEventFunc func() istructs.IPLogEvent
+type CommandPrepareArgsFunc func() istructs.CommandPrepareArgs
+type ArgFunc func() istructs.IObject
+type UnloggedArgFunc func() istructs.IObject
+type WLogOffsetFunc func() istructs.Offset
+type FederationFunc func() federation.IFederation
+type QNameFunc func() appdef.QName
+type TokensFunc func() itokens.ITokens
+type PrepareArgsFunc func() istructs.PrepareArgs
+type ExecQueryCallbackFunc func() istructs.ExecQueryCallback
+type UnixTimeFunc func() int64
+type MockedStateFactory func(intentsLimit int, appStructsFunc AppStructsFunc) IHostState
+type CommandProcessorStateFactory func(ctx context.Context, appStructsFunc AppStructsFunc, partitionIDFunc PartitionIDFunc, wsidFunc WSIDFunc, secretReader isecrets.ISecretReader, cudFunc CUDFunc, principalPayloadFunc PrincipalsFunc, tokenFunc TokenFunc, intentsLimit int, cmdResultBuilderFunc ObjectBuilderFunc, execCmdArgsFunc CommandPrepareArgsFunc, argFunc ArgFunc, unloggedArgFunc UnloggedArgFunc, wlogOffsetFunc WLogOffsetFunc, stateCfg StateConfig) IHostState
+type SyncActualizerStateFactory func(ctx context.Context, appStructsFunc AppStructsFunc, partitionIDFunc PartitionIDFunc, wsidFunc WSIDFunc, n10nFunc N10nFunc, secretReader isecrets.ISecretReader, eventFunc PLogEventFunc, intentsLimit int, stateCfg StateConfig) IHostState
+type QueryProcessorStateFactory func(ctx context.Context, appStructsFunc AppStructsFunc, partitionIDFunc PartitionIDFunc, wsidFunc WSIDFunc, secretReader isecrets.ISecretReader, principalPayloadFunc PrincipalsFunc, tokenFunc TokenFunc, itokens itokens.ITokens, execQueryArgsFunc PrepareArgsFunc, argFunc ArgFunc, resultBuilderFunc ObjectBuilderFunc, federation federation.IFederation, queryCallbackFunc ExecQueryCallbackFunc, stateCfg StateConfig) IHostState
+type AsyncActualizerStateFactory func(ctx context.Context, appStructsFunc AppStructsFunc, partitionIDFunc PartitionIDFunc, wsidFunc WSIDFunc, n10nFunc N10nFunc, secretReader isecrets.ISecretReader, eventFunc PLogEventFunc, tokensFunc itokens.ITokens, federationFunc federation.IFederation, intentsLimit, bundlesLimit int, stateCfg StateConfig) IBundledHostState
+type SchedulerStateFactory func(ctx context.Context, appStructsFunc AppStructsFunc, wsidFunc WSIDFunc, n10nFunc N10nFunc, secretReader isecrets.ISecretReader, tokensFunc itokens.ITokens, federationFunc federation.IFederation, unixTimeFunc UnixTimeFunc, intentsLimit int, optFuncs StateConfig) IHostState
+
+type FederationCommandHandler = func(owner, appname string, wsid istructs.WSID, command appdef.QName, body string) (statusCode int, newIDs map[string]istructs.RecordID, result string, err error)
+type FederationBlobHandler = func(owner, appname string, wsid istructs.WSID, ownerRecord appdef.QName, ownerRecordField appdef.FieldName, ownerID istructs.RecordID) (result []byte, err error)
+type UniquesHandler = func(entity appdef.QName, wsid istructs.WSID, data map[string]interface{}) (istructs.RecordID, error)
+
+type EventsFunc func() istructs.IEvents
+type RecordsFunc func() istructs.IRecords
+
+type IHTTPClient interface {
+	Request(timeout time.Duration, method, url string, body io.Reader, headers map[string]string) (statusCode int, resBody []byte, resHeaders map[string][]string, err error)
+}
+
+type StateConfig struct {
+	MessagesSenderOverride   chan smtptest.Message
+	FederationCommandHandler FederationCommandHandler
+	FederationBlobHandler    FederationBlobHandler
+	CustomHTTPClient         IHTTPClient
+	UniquesHandler           UniquesHandler
+}
+
+type ApplyBatchItem struct {
+	Key   istructs.IStateKeyBuilder
+	Value istructs.IStateValueBuilder
+	IsNew bool
+}
+
+type GetBatchItem struct {
+	Key   istructs.IStateKeyBuilder
+	Value istructs.IStateValue
+}

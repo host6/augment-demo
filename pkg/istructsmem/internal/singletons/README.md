@@ -1,0 +1,4 @@
+
+# Singletons
+
+Singletons system view

@@ -1,0 +1,77 @@
+name: CI - golang
+on:
+  workflow_call:
+    inputs:
+      ignore_copyright:
+        required: false
+        type: string
+      test_folder:
+        required: false
+        type: string
+      ignore_bp3:
+        required: false
+        type: string
+      short_test:
+        required: false
+        type: string
+      commit_name:
+        required: false
+        type: string
+      go_race:
+        required: false
+        type: string
+      ignore_build:
+        required: false
+        type: string
+      test_subfolders:
+        required: false
+        type: string
+    secrets:
+      reporeading_token:
+        required: true
+      codecov_token:
+        required: true
+      personal_token:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+        cache: false
+
+    # Install TinyGo
+    - name: Install TinyGo
+      run: |
+        wget https://github.com/tinygo-org/tinygo/releases/download/v0.37.0/tinygo_0.37.0_amd64.deb
+        sudo dpkg -i tinygo_0.37.0_amd64.deb
+
+    - name: Cache Go - Modules
+      uses: actions/cache@v4
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: CI
+      uses: untillpro/ci-action@main
+      with:
+        ignore: ${{ inputs.ignore_copyright }}
+        test-folder: ${{ inputs.test_folder }}
+        organization: 'untillpro,heeus'
+        token: ${{ secrets.reporeading_token }}
+        codecov-token: ${{ secrets.codecov_token }}
+        short-test:  ${{ inputs.short_test }}
+        ignore-build:  ${{ inputs.ignore_build }}
+        codecov-go-race: ${{ inputs.go_race }}
+        run-mod-tidy: false
+      run: go test ./...

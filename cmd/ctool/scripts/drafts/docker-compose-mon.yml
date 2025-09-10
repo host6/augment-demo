@@ -1,0 +1,292 @@
+version: '3.5'
+services:
+  prometheus1:
+    image: prom/prometheus:v2.44.0
+    networks:
+      - outside
+    volumes:
+      - /prometheus:/prometheus
+      - ~/prometheus:/etc/prometheus
+      - /etc/hosts:/etc/hosts
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.config.file=/etc/prometheus/web.yml'
+      - '--web.enable-admin-api'
+      - '--web.enable-lifecycle'
+      - '--web.route-prefix=/'
+      - '--web.external-url=http://localhost:9090/prometheus/'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode1 == true
+      replicas: 1
+    logging:
+      driver: "local"
+      options: 
+        max-size: 10m
+        max-file: "3"
+
+  grafana1:
+    image: grafana/grafana:8.3.4
+    networks:
+      - outside
+    volumes:
+      - ~/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ~/grafana/provisioning/datasources/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ~/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - /var/lib/grafana:/var/lib/grafana
+      - /etc/hosts:/etc/hosts
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode1 == true
+      replicas: 1
+    logging:
+      driver: "local"
+      options: 
+        max-size: 10m
+        max-file: "3"
+    links:
+      - prometheus1
+
+  grafana2:
+    image: grafana/grafana:8.3.4
+    networks:
+      - outside
+    volumes:
+      - ~/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ~/grafana/provisioning/datasources/datasource.yml:/etc/grafana/provisioning/datasources/datasource.yml
+      - ~/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - /var/lib/grafana:/var/lib/grafana
+      - /etc/hosts:/etc/hosts
+    ports:
+      - target: 3000
+        published: 3000
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode2 == true
+      replicas: 1
+    logging:
+      driver: "local"
+      options: 
+        max-size: 10m
+        max-file: "3"
+    links:
+      - prometheus2
+
+  cadvisor1:
+    image: gcr.io/cadvisor/cadvisor:v0.47.1
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode1 == true
+    networks:
+      - outside
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /etc/hosts:/etc/hosts
+    restart: unless-stopped
+
+  cadvisor2:
+    image: gcr.io/cadvisor/cadvisor:v0.47.1
+    ports:
+      - target: 8080
+        published: 8080
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode2 == true
+    networks:
+      - outside
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /etc/hosts:/etc/hosts
+    restart: unless-stopped
+
+  prometheus2:
+    image: prom/prometheus:v2.44.0
+    networks:
+      - outside
+    volumes:
+      - /prometheus:/prometheus
+      - ~/prometheus:/etc/prometheus
+      - /etc/hosts:/etc/hosts
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.config.file=/etc/prometheus/web.yml'
+      - '--web.enable-admin-api'
+      - '--web.enable-lifecycle'
+      - '--web.route-prefix=/'
+      - '--web.external-url=http://localhost:9090/prometheus/'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    restart: unless-stopped
+    ports:
+      - target: 9090
+        published: 9090
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode2 == true
+      replicas: 1
+    logging:
+      driver: "local"
+      options: 
+        max-size: 10m
+        max-file: "3"
+
+  alertmanager1:
+    image: prom/alertmanager:v0.26.0
+    networks:
+      - outside
+    volumes:
+      - /alertmanager:/alertmanager
+      - ~/alertmanager:/etc/alertmanager
+      - /etc/hosts:/etc/hosts
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+      - '--cluster.peer={{.AppNode2}}:9094' 
+      - '--cluster.listen-address=:9094'
+      - '--cluster.advertise-address=:9094'
+    restart: unless-stopped
+    ports:
+      - target: 9093
+        published: 9093
+        protocol: tcp
+        mode: host
+      - target: 9094
+        published: 9094
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode1 == true
+      replicas: 1
+
+  alertmanager2:
+    image: prom/alertmanager:v0.26.0
+    networks:
+      - outside
+    volumes:
+      - /alertmanager:/alertmanager
+      - ~/alertmanager:/etc/alertmanager
+      - /etc/hosts:/etc/hosts
+    command:
+      - '--config.file=/etc/alertmanager/config.yml'
+      - '--storage.path=/alertmanager'
+      - '--cluster.peer={{.AppNode1}}:9094' 
+      - '--cluster.listen-address=:9094'
+      - '--cluster.advertise-address=:9094'
+    restart: unless-stopped
+    ports:
+      - target: 9093
+        published: 9093
+        protocol: tcp
+        mode: host
+      - target: 9094
+        published: 9094
+        protocol: tcp
+        mode: host
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode2 == true
+      replicas: 1
+
+  node-exporter1:
+    image: prom/node-exporter:v1.6.1
+
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode1 == true
+      replicas: 1
+    networks:
+      - outside
+    volumes:
+      - /etc/hostname:/etc/nodename
+      - /etc/node-exporter:/etc/node-exporter
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /etc/hosts:/etc/hosts
+    command: 
+      - '--path.procfs=/host/proc' 
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/etc/node-exporter/'
+    ports:
+      - target: 9100
+        published: 9100
+        protocol: tcp
+        mode: host
+    restart: unless-stopped
+
+  node-exporter2:
+    image: prom/node-exporter:v1.6.1
+
+    deploy:
+      placement:
+        constraints:
+          - node.labels.AppNode2 == true
+      replicas: 1
+    networks:
+      - outside
+    volumes:
+      - /etc/hostname:/etc/nodename
+      - /etc/node-exporter:/etc/node-exporter
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /etc/hosts:/etc/hosts
+    command: 
+      - '--path.procfs=/host/proc' 
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.ignored-mount-points=^/(sys|proc|dev|host|etc)($$|/)'
+      - '--collector.textfile.directory=/etc/node-exporter/'
+    ports:
+      - target: 9100
+        published: 9100
+        protocol: tcp
+        mode: host
+    restart: unless-stopped
+networks:
+  outside:
+    name: host
+    external: true
+

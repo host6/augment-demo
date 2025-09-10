@@ -1,0 +1,36 @@
+-- Copyright (c) 2024-present unTill Software Development Group B.V.
+-- @author Denis Gribanov
+
+ALTER WORKSPACE sys.AppWorkspaceWS (
+
+	TABLE App INHERITS sys.WDoc (
+		AppQName varchar NOT NULL,
+		NumPartitions int32 NOT NULL,
+		NumAppWorkspaces int32 NOT NULL,
+		UNIQUE (AppQName)
+	);
+
+	TYPE AppDeploymentDescriptor (
+		AppQName varchar NOT NULL,
+		NumPartitions int32 NOT NULL,
+		NumAppWorkspaces int32 NOT NULL
+		-- AppImage blob
+	);
+
+	TYPE VSqlUpdateParams (
+		Query varchar(65535) NOT NULL
+	);
+
+	TYPE VSqlUpdateResult (
+		NewID ref -- filled on `insert table` only
+	);
+
+	EXTENSION ENGINE BUILTIN (
+		COMMAND DeployApp(AppDeploymentDescriptor);
+		COMMAND VSqlUpdate(VSqlUpdateParams) RETURNS VSqlUpdateResult;
+	);
+
+	ROLE ClusterAdmin;
+
+	GRANT EXECUTE ON COMMAND DeployApp TO ClusterAdmin;
+);

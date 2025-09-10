@@ -1,0 +1,10 @@
+go 1.24.4
+
+use (
+	./app
+	./mypkg1
+	./mypkg2
+	./mypkg3
+	./mypkg4
+	./mypkg5
+)
