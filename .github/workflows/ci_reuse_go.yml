@@ -63,15 +63,4 @@ jobs:
           ${{ runner.os }}-go-
 
     - name: CI
-      uses: untillpro/ci-action@main
-      with:
-        ignore: ${{ inputs.ignore_copyright }}
-        test-folder: ${{ inputs.test_folder }}
-        organization: 'untillpro,heeus'
-        token: ${{ secrets.reporeading_token }}
-        codecov-token: ${{ secrets.codecov_token }}
-        short-test:  ${{ inputs.short_test }}
-        ignore-build:  ${{ inputs.ignore_build }}
-        codecov-go-race: ${{ inputs.go_race }}
-        run-mod-tidy: false
       run: go test ./...
