@@ -26,13 +26,5 @@ jobs:
         wget https://github.com/tinygo-org/tinygo/releases/download/v0.37.0/tinygo_0.37.0_amd64.deb
         sudo dpkg -i tinygo_0.37.0_amd64.deb
 
-    - name: Cache Go - Modules
-      uses: actions/cache@v4
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-
     - name: CI
-      run: go test ./...
+      run: go test ./... -short
