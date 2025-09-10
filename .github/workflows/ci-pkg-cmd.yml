@@ -8,13 +8,9 @@ on:
 jobs:
   ci:
     runs-on: ubuntu-22.04
-    secrets:
-      reporeading_token: ${{ secrets.REPOREADING_TOKEN }}
-      codecov_token: ""
-      personal_token: ${{ secrets.PERSONAL_TOKEN }}
 
     steps:
-    
+
     - name: Checkout
       uses: actions/checkout@v4
 
